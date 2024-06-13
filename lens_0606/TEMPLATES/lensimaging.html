@@ -1,0 +1,271 @@
+<!-- HelloDjango.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+<title>easy lens imaging</title>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+    }
+
+    body {
+        background-image: url('{% static '/background.png' %}');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-attachment: fixed;
+    }
+
+    em {
+    color: rgb(32, 178, 117);
+    }
+
+    .form {
+        display: flex;
+        justify-content: center;
+    }
+
+    .axis-container {
+        position: relative;
+        width: 100%;
+        height: 100px;
+        margin-top: 50px;
+    }
+
+    .axis {
+        position: absolute;
+        top: 250px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: black;
+    }
+
+    .convex {
+        position: absolute;
+        top: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 400px;
+        background: url('{% static '/convex.png' %}') no-repeat center center;
+        background-size: contain;
+        visibility: hidden;
+    }
+
+    .concave {
+        position: absolute;
+        top: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 400px;
+        background: url('{% static '/concave.png' %}') no-repeat center center;
+        background-size: contain;
+        visibility: hidden;
+    }
+
+    .focal-line {
+        position: absolute;
+        top: 225px;
+        width: 2px;
+        height: 50px;
+        background-color: rgb(255, 0, 0);
+        visibility: hidden; /* 一開始設置為不可見 */
+    }
+
+    .focal-line-fake {
+        position: absolute;
+        top: 225px;
+        width: 0px;
+        height: 50px;
+        background-color: rgb(0, 0, 0, 0);
+        visibility: hidden; /* 一開始設置為不可見 */
+        border-left-style: dashed;
+        border-left-color: red;
+    }
+
+    .object-arrow {
+        position: absolute;
+        top: 50px;
+        width: 200px;
+        height: 200px;
+        background: url('{% static '/arrow.png' %}') no-repeat center center;
+        visibility: hidden;
+        background-size: contain;
+    }
+
+    .fake-arrow {
+        position: absolute;
+        top: 50px;
+        width: 200px;
+        height: 200px;
+        background: url('{% static '/arrowfake.png' %}') no-repeat center center;
+        visibility: hidden;
+        background-size: contain;
+        transform-origin: bottom center;
+    }
+
+    .real-arrow {
+        position: absolute;
+        top: 250px;
+        width: 200px;
+        height: 200px;
+        background: url('{% static '/arrowreal.png' %}') no-repeat center center;
+        visibility: hidden;
+        background-size: contain;
+        transform-origin: top center;
+    }
+</style>
+
+<script>
+    function setPositions() {
+        var focalInput = document.getElementById('Focal').value;
+        var objectInput = document.getElementById('Object').value;
+
+        var focalLine = document.getElementById('focalLine');
+        var focalLineFake = document.getElementById('focalLineFake');
+        var objectArrow = document.getElementById('objectArrow');
+        var convex = document.getElementById('convex');
+        var concave = document.getElementById('concave');
+
+        var lensPosition = document.querySelector('.convex').offsetLeft;
+        
+        focalLine.style.visibility = 'hidden';
+        focalLineFake.style.visibility = 'hidden';
+        convex.style.visibility = 'hidden';
+        concave.style.visibility = 'hidden';
+
+        if (focalInput.trim() !== '') {
+            var focalDistance = parseFloat(focalInput) * 6;
+
+            focalLine.style.left = (lensPosition - focalDistance) + 'px';
+            focalLineFake.style.left = (lensPosition + focalDistance) + 'px';
+
+            focalLine.style.visibility = 'visible'; // 設置為可見
+            focalLineFake.style.visibility = 'visible';
+
+            if (focalDistance > 0) {
+                convex.style.visibility = 'visible';
+            }
+            else if (focalDistance < 0) {
+                concave.style.visibility = 'visible';
+            }
+        }
+
+        if (objectInput.trim() !== '') {
+            var objectDistance = parseFloat(objectInput) * 6 + 100;
+            objectArrow.style.left = (lensPosition - objectDistance) + 'px';
+            objectArrow.style.visibility = 'visible'; // 設置為可見
+        }
+    }
+
+    function waringZero() {
+        var focalInput = document.getElementById('Focal').value;
+        var objectInput = document.getElementById('Object').value;
+
+        if (focalInput == 0 || objectInput == 0) {
+            alert("輸入值不可為0")
+        }
+    }
+
+    window.onload = function() {
+        setPositions();
+        imaging();
+    }
+
+    function imaging() {
+        var ImagingOutput = document.getElementById('Imaging').value;
+        var imagingFakeArrow = document.getElementById('imagingFakeArrow');
+        var imagingRealArrow = document.getElementById('imagingRealArrow');
+        var magnification = document.getElementById('magnification');
+
+        var objectInput = document.getElementById('Object').value;
+
+        var lensPosition = document.querySelector('.convex').offsetLeft;
+
+        imagingFakeArrow.style.visibility = 'hidden';
+        imagingRealArrow.style.visibility = 'hidden';
+
+        if (!/\d/.test(ImagingOutput)) {
+            return;
+        }
+
+        var ImagingValue = parseFloat(ImagingOutput.replace("cm", ""));
+        var ImagingDistance = -ImagingValue * 6 + 100;
+        var scaleImg = (Math.abs(ImagingValue)/objectInput).toFixed(3);
+
+        if (ImagingValue > 0) {
+            var realarrow = document.querySelector('.real-arrow');
+            imagingRealArrow.style.left = (lensPosition - ImagingDistance) + 'px';
+            realarrow.style.transform = 'scale(' + scaleImg + ')';
+            imagingRealArrow.style.visibility = 'visible';
+
+        } else if (ImagingValue < 0) {
+            var fakearrow = document.querySelector('.fake-arrow');
+            imagingFakeArrow.style.left = (lensPosition - ImagingDistance) + 'px';
+            fakearrow.style.transform = 'scale(' + scaleImg + ')';
+            imagingFakeArrow.style.visibility = 'visible';
+        }
+
+        magnification.value = scaleImg
+    }
+</script>
+
+</head>
+<body>
+    <form method="post" onsubmit="waringZero(), setPositions(), imaging()" class="form">
+        <table>
+            <tbody>
+                {% csrf_token %}
+                <tr>
+                    <td align="right"><span class="01">焦　距:</span></td>
+                    <td>
+                        <input name="Focal" type="text" id="Focal" size="11" style="border: 1px solid #0B6060" oninput="setPositions()" value="{{ Focal }}">
+                        <font face="Arial"> cm</font>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right"><span class="01">物　距:</span></td>
+                    <td>
+                        <input name="Object" type="text" id="Object" size="11" style="border: 1px solid #0B6060" oninput="setPositions()" value="{{ Object }}">
+                        <font face="Arial"> cm</font>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="right">
+                        <input type="submit" name="lenscal" value="開始計算">
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" class="01">像距為:</td>
+                    <td>
+                        <input name="Imaging" type="text" id="Imaging" size="15" style="border: 1px solid #2B737B; padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px; background-color: #D9F4F1" value="{{ Image }}" disabled="disabled" oninput="imaging()">
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" class="01">放大倍率:</td>
+                    <td>
+                        <input name="magnification" type="text" id="magnification" size="15" style="border: 1px solid #2B737B; padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px; background-color: #D9F4F1" value="" disabled="disabled" oninput="imaging()">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+
+    <div class="axis-container">
+        <div class="axis"></div>
+        <div id="convex" class="convex"></div>
+        <div id="concave" class="concave"></div>
+        <div id="focalLine" class="focal-line"></div>
+        <div id="focalLineFake" class="focal-line-fake"></div>
+        <div id="objectArrow" class="object-arrow"></div>
+        <div id="imagingFakeArrow" class="fake-arrow"></div>
+        <div id="imagingRealArrow" class="real-arrow"></div>
+    </div>
+</body>
+</html>
